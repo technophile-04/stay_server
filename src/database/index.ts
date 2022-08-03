@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import { Database } from '../lib/types';
+import { Booking, Database, Listing, User } from '../lib/types';
 
 const user = process.env.DB_USER;
 const password = process.env.DB_USER_PASSWORD;
@@ -9,9 +9,11 @@ const uri = `mongodb://${user}:${password}@${cluster}.reta2.mongodb.net:27017,cl
 
 export const connectDatabase = async (): Promise<Database> => {
 	const client = await MongoClient.connect(uri);
-	const db = client.db('theRentD');
+	const db = client.db('stay');
 
 	return {
-		listings: db.collection('test_listings'),
+		listings: db.collection<Listing>('listings'),
+		bookings: db.collection<Booking>('bookings'),
+		users: db.collection<User>('users'),
 	};
 };
