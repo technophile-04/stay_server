@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { MongoClient } from 'mongodb';
 import { Booking, Database, Listing, User } from '../lib/types';
 

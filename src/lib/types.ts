@@ -60,7 +60,7 @@ export interface User {
 	// identifying filed to store users payment details
 	walletId?: string;
 	// users total income
-	income: string;
+	income: number;
 	// users bookings
 	bookings: ObjectId[];
 	// users listed rooms
