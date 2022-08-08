@@ -20,11 +20,11 @@ const mount = async (app: Application) => {
 
 	await server.start();
 
-	server.applyMiddleware({ app, path: '/graphql' });
+	server.applyMiddleware({ app, path: '/api' });
 
 	app.listen(PORT, () => {
 		console.log(`Server running on port ${PORT}`);
-		console.log(`Graphql endpoint : http://localhost:${PORT}/graphql`);
+		console.log(`Graphql endpoint : http://localhost:${PORT}/api`);
 	});
 };
 
