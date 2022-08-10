@@ -3,12 +3,21 @@ import { Google } from '../../../lib/api';
 import { Database, User, Viewer } from '../../../lib/types';
 import { LogInArgs } from './types';
 import crypto from 'crypto';
+import { Request, Response } from 'express';
+
+const cookieOptions  = {
+	httpOnly: true,
+	secure: process.env.NODE_ENV === 'production',
+	sameSite : true,
+	signed: true,
+}
 
 const loginViaGoogle = async (
 	code: string,
 	token: string,
-	db: Database
-): Promise<User | undefined> => {
+	db: Database,
+	res : Response
+): Promise<User | null> => {
 	const { user } = await Google.login(code);
 	if (!user) {
 		throw new Error('Google login error');
@@ -45,6 +54,7 @@ const loginViaGoogle = async (
 				token: token,
 				contact: userEmail,
 			},
+			returnNewDocument : true,	
 		}
 	);
 	let viewer = updateRes.value;
@@ -73,8 +83,32 @@ const loginViaGoogle = async (
 		};
 	}
 
+	res.cookie('viewer', userId, {
+		...cookieOptions,
+		maxAge : 365 * 24 * 60 * 60 * 1000,
+	})
+
 	return viewer;
 };
+
+const loginViaCookie = async (token : string, db : Database, req : Request, res : Response) : Promise<User | null> => {
+	const updateRes = await db.users.findOneAndUpdate({_id : req.signedCookies.viewer}, {
+		$set : {
+			token
+		},
+		returnNewDocument : true
+	})
+
+	const viewer = updateRes.value;
+
+	if(!viewer) {
+		res.clearCookie("viewer", cookieOptions);
+	}
+
+
+	return viewer; 
+
+}
 
 export const viewerResolver: IResolvers = {
 	Query: {
@@ -90,15 +124,15 @@ export const viewerResolver: IResolvers = {
 		logIn: async (
 			_root: undefined,
 			{ input }: LogInArgs,
-			{ db }: { db: Database }
+			{ db, res, req}: { db: Database, res : Response, req : Request }
 		): Promise<Viewer> => {
 			try {
 				const code = input ? input.code : null;
 				const token = crypto.randomBytes(16).toString('hex');
 
-				const viewer: User | undefined = code
-					? await loginViaGoogle(code, token, db)
-					: undefined;
+				const viewer: User | null = code
+					? await loginViaGoogle(code, token, db, res)
+					: await loginViaCookie(token, db, req, res);
 
 				if (!viewer) {
 					return { didRequest: true };
@@ -115,8 +149,9 @@ export const viewerResolver: IResolvers = {
 				throw new Error(`Failed to log in : ${error}`);
 			}
 		},
-		logOut: (): Viewer => {
+		logOut: (_root : undefined, _args : Record<string, never>, {res} : {res : Response}): Viewer => {
 			try {
+				res.clearCookie('viewer', cookieOptions);
 				return { didRequest: true };
 			} catch (error) {
 				throw new Error(`Failed to log out : ${error}`);
