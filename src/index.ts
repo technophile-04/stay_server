@@ -12,7 +12,7 @@ const mount = async (app: Application) => {
 	const db = await connectDatabase();
 
 	app.use(cookieParser(process.env.SECRET));
-	const corsOption = { credentials: true, origin: 'http://localhost:3000' };
+	const corsOption = { credentials: true, origin: '*' };
 
 	const server = new ApolloServer({
 		typeDefs,

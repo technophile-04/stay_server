@@ -65,6 +65,8 @@ export interface User {
 	bookings: ObjectId[];
 	// users listed rooms
 	listings: ObjectId[];
+	// to check if user is authorized(not stored in db)
+	authorized?: boolean;
 }
 
 export interface Booking {

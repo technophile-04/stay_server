@@ -1,3 +1,4 @@
 import merge from 'lodash.merge';
 import { viewerResolver } from './Viewer';
-export const resolvers = merge(viewerResolver);
+import { userResolver } from './User';
+export const resolvers = merge(userResolver, viewerResolver);
