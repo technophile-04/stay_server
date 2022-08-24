@@ -40,26 +40,26 @@ export const userResolver: IResolvers = {
 		income: (user: User) => {
 			return user.authorized ? user.income : null;
 		},
-		// bookings: async (
-		// 	user: User,
-		// 	{ limit, page }: UserBookingArgs,
-		// 	{ db }: { db: Database }
-		// ): Promise<UserBookingData | null> => {
-		// 	try {
-		// 		if (!user.authorized) {
-		// 			return null;
-		// 		}
+		bookings: async (
+			user: User,
+			{ limit, page }: UserBookingArgs,
+			{ db }: { db: Database }
+		): Promise<UserBookingData | null> => {
+			try {
+				if (!user.authorized) {
+					return null;
+				}
 
-		// 		const data: UserBookingData = {
-		// 			total: 0,
-		// 			result: [],
-		// 		};
+				const data: UserBookingData = {
+					total: 0,
+					result: [],
+				};
 
-		// 		let cursor = await db.bookings.find({
-		// 			_id: { $in: user.bookings },
-		// 		});
-		// 	} catch (error) {}
-		// },
+				let cursor = await db.bookings.find({
+					_id: { $in: user.bookings },
+				});
+			} catch (error) {}
+		},
 		listings: () => {},
 	},
 };
