@@ -2,7 +2,13 @@ import { IResolvers } from '@graphql-tools/utils';
 import { Request } from 'express';
 import { Database, User } from '../../../lib/types';
 import { authorize } from '../../../lib/utils';
-import { UserArgs, UserBookingArgs, UserBookingData } from './types';
+import {
+	UserArgs,
+	UserBookingArgs,
+	UserBookingData,
+	UserListingArgs,
+	UserListingData,
+} from './types';
 
 export const userResolver: IResolvers = {
 	Query: {
@@ -58,8 +64,47 @@ export const userResolver: IResolvers = {
 				let cursor = await db.bookings.find({
 					_id: { $in: user.bookings },
 				});
-			} catch (error) {}
+
+				cursor = cursor.skip(page > 0 ? (page - 1) * limit : 0);
+				cursor = cursor.limit(limit);
+
+				data.total = await cursor.count();
+				data.result = await cursor.toArray();
+
+				return data;
+			} catch (error) {
+				throw new Error(`Failed to query user bookings ${error}`);
+			}
 		},
-		listings: () => {},
+		listings: async (
+			user: User,
+			{ limit, page }: UserListingArgs,
+			{ db }: { db: Database }
+		): Promise<UserListingData | null> => {
+			try {
+				if (!user.authorized) {
+					return null;
+				}
+
+				const data: UserListingData = {
+					total: 0,
+					result: [],
+				};
+
+				let cursor = await db.listings.find({
+					_id: { $in: user.listings },
+				});
+
+				cursor = cursor.skip(page > 0 ? (page - 1) * limit : 0);
+				cursor = cursor.limit(limit);
+
+				data.total = await cursor.count();
+				data.result = await cursor.toArray();
+
+				return data;
+			} catch (error) {
+				throw new Error(`Failed to query user listings ${error}`);
+			}
+		},
 	},
 };
