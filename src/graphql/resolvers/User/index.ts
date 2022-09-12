@@ -82,10 +82,6 @@ export const userResolver: IResolvers = {
 			{ db }: { db: Database }
 		): Promise<UserListingData | null> => {
 			try {
-				if (!user.authorized) {
-					return null;
-				}
-
 				const data: UserListingData = {
 					total: 0,
 					result: [],
@@ -94,13 +90,13 @@ export const userResolver: IResolvers = {
 				let cursor = await db.listings.find({
 					_id: { $in: user.listings },
 				});
+				data.total = user.listings.length;
 
 				cursor = cursor.skip(page > 0 ? (page - 1) * limit : 0);
 				cursor = cursor.limit(limit);
 
-				data.total = await cursor.count();
 				data.result = await cursor.toArray();
-
+				console.log('Listings', data);
 				return data;
 			} catch (error) {
 				throw new Error(`Failed to query user listings ${error}`);
